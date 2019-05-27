@@ -16,6 +16,6 @@
 
 @push('scripts')
 
-       <script src="{{ mix('/js/validaciones/validacionesEditorial.js') }}" defer ></script>
+    <script src="{{ mix('/js/validaciones/validacionEditorial.js') }}" defer ></script>
 
 @endpush

@@ -81,20 +81,53 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 1);
+/******/ 	return __webpack_require__(__webpack_require__.s = 2);
 /******/ })
 /************************************************************************/
-/******/ ([
-/* 0 */,
-/* 1 */
-/*!*************************************************************!*\
-  !*** multi ./resources/js/validaciones/validacionLibros.js ***!
-  \*************************************************************/
+/******/ ({
+
+/***/ "./resources/js/paginate/paginate.js":
+/*!*******************************************!*\
+  !*** ./resources/js/paginate/paginate.js ***!
+  \*******************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+var contadorMostrados = 10;
+$(window).on("scroll", function () {
+  $("#spinner").hide();
+  var scrollHeight = $(document).height();
+  var scrollPosition = $(window).height() + $(window).scrollTop();
+
+  if ((scrollHeight - scrollPosition) / scrollHeight === 0) {
+    $("#spinner").show();
+    axios.get('/books/paginateAjax/obtenerAjax/'.concat(contadorMostrados)).then(function (response) {
+      if (response.data === "") {
+        alert("NO HAY MAS LIBROS");
+      } else {
+        $("#mostrarBusqueda").append(response.data);
+        contadorMostrados += 10;
+      }
+    })["catch"](function (error) {
+      console.log(error);
+    }).then(function () {
+      $("#spinner").hide();
+    });
+  }
+});
+
+/***/ }),
+
+/***/ 2:
+/*!*************************************************!*\
+  !*** multi ./resources/js/paginate/paginate.js ***!
+  \*************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-!(function webpackMissingModule() { var e = new Error("Cannot find module '/home/jose/Sites/ClientesFinal/resources/js/validaciones/validacionLibros.js'"); e.code = 'MODULE_NOT_FOUND'; throw e; }());
+module.exports = __webpack_require__(/*! /home/jose/Sites/ClientesFinal/resources/js/paginate/paginate.js */"./resources/js/paginate/paginate.js");
 
 
 /***/ })
-/******/ ]);
+
+/******/ });
