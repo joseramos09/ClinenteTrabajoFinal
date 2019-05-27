@@ -1,7 +1,5 @@
 <?php
-
 namespace App\Http\Controllers;
-
 use App\Book;
 use App\Publisher;
 use App\Author;
@@ -10,19 +8,17 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Requests\BookRequest;
 use App\Notifications\BookCreated;
-
 class BooksController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth', [
+        /*$this->middleware('auth', [
             'only' => ['create' , 'store', 'edit', 'update', 'destroy']
         ]);
         $this->middleware('can:touch,book',[
             'only' => ['edit','update','destroy']
-        ]);
+        ]);*/
     }
-
     /**
      * Display a listing of the resource.
      *
@@ -33,17 +29,13 @@ class BooksController extends Controller
         $books = Book::with(['user','authors','publisher'])
                     ->latest()
                     ->paginate(10);
-
         // $condition = true;
-
         // if($condition){
         //     $books = $books->load(['user','authors','publisher'])
         //                 ->latest()->paginate(10);
         // }
-
         return view('public.books.index')->withBooks($books);
     }
-
     /**
      * Show the form for creating a new resource.
      *
@@ -53,13 +45,11 @@ class BooksController extends Controller
     {
         $publishers = Publisher::all();
         $authors = Author::all();
-
         return view('public.books.create', [
             'publishers' => $publishers,
             'authors'    => $authors
         ]);
     }
-
     /**
      * Store a newly created resource in storage.
      *
@@ -69,9 +59,7 @@ class BooksController extends Controller
     public function store(BookRequest $request)
     {
         $cover = $request->file('cover');
-
         //dd($cover);
-
         $book = Book::create([
             'user_id' => $request->user()->id,
             'publisher_id' => request('publisher'),
@@ -80,15 +68,11 @@ class BooksController extends Controller
             'description' => request('description'),
             'cover' => ($cover?$cover->store('covers','public'):null),
         ]);
-
         $book->authors()->sync( request('author') );
-
         $user = User::find(1);
         $user->notify(new BookCreated($book));
-
         return redirect('/');
     }
-
     /**
      * Display the specified resource.
      *
@@ -98,10 +82,8 @@ class BooksController extends Controller
     public function show($slug)
     {
         $book = Book::with('authors')->where('slug', $slug)->firstOrFail();
-
         return view('public.books.show', ['book' => $book]);
     }
-
     /**
      * Show the form for editing the specified resource.
      *
@@ -112,7 +94,6 @@ class BooksController extends Controller
     {
         $publishers = Publisher::all();
         $authors = Author::all();
-
         return view('public.books.edit', [
             'book' => $book,
             'authors' => $authors,
@@ -120,7 +101,6 @@ class BooksController extends Controller
             
         ]);
     }
-
     /**
      * Update the specified resource in storage.
      *
@@ -131,12 +111,10 @@ class BooksController extends Controller
     public function update(BookRequest $request, Book $book)
     {
         $cover = $request->file('cover');
-
         // En caso de tener ya uno, eliminamos la portada anterior
         if( $cover && $book->cover  ){
             Storage::disk('public')->delete($book->cover);
         }
-
         $book->update([
             'title' => request('title'),
             'publisher_id' => request('publisher'),
@@ -144,12 +122,9 @@ class BooksController extends Controller
             'description' => request('description'),
             'cover' => ($cover?$cover->store('covers','public'):$book->cover),
         ]);
-
         $book->authors()->sync( request('author') );
-
         return redirect('/books/'.$book->slug);
     }
-
     /**
      * Remove the specified resource from storage.
      *
@@ -161,15 +136,98 @@ class BooksController extends Controller
         if( $book->cover ){
             Storage::disk('public')->delete($book->cover);
         }
-
         $book->authors()->detach();
         $book->delete();
-
         return redirect('/books')
             ->with('message', "The book '{$book->title}' has been deleted.");
     }
-
-    public function deleteAjax(){
+    public function crearLibroAjax(BookRequest $request)
+    {   
+        sleep(5);
+        $cover = $request->file('cover');
+        //dd($cover);
+        $book = Book::create([
+            'user_id' => $request->user()->id,
+            'publisher_id' => request('publisher'),
+            'title' => request('title'),
+            'slug' => str_slug(request('title'), "-"),
+            'description' => request('description'),
+            'cover' => ($cover?$cover->store('covers','public'):null),
+        ]);
+        $book->authors()->sync( request('author') );
+        $user = User::find(1);
+        $user->notify(new BookCreated($book));
+        return "EL LIBRO SE HA CREADO CORRECTAMENTE";
+    }
+    public function editarLibroAjax(BookRequest $request,$idBook){
+        sleep(3);
+        $book = Book::where('id', $idBook)->firstOrFail();
+        $cover = $request->file('cover');
+        // En caso de tener ya uno, eliminamos la portada anterior
+        if( $cover && $book->cover  ){
+            Storage::disk('public')->delete($book->cover);
+        }
+        $book->update([
+            'title' => request('title'),
+            'publisher_id' => request('publisher'),
+            'slug' => str_slug(request('title'), "-"),
+            'description' => request('description'),
+            'cover' => ($cover?$cover->store('covers','public'):$book->cover),
+        ]);
         
+        $book->authors()->sync( request('author') );
+        
+        return "EL LIBRO SE HA EDITADO CORRECTAMENTE";
+    }
+    public function eliminarLibroAjax($idBook){
+        sleep(3);
+        
+        $book = Book::where('id', $idBook)->firstOrFail(); 
+        if( $book->cover ){
+            Storage::disk('public')->delete($book->cover);
+        }
+        $book->authors()->detach();
+        $book->delete();
+        return "El libro '{$book->title}' ha sido borrado";
+      
+    }
+    public function mostrarLibroAjax($idBook){
+        sleep (3);
+        $book = Book::where('id', $idBook)->firstOrFail(); 
+        return view('public.books.partials.showData', ['book' => $book]);
+    }
+    public function buscarAjax(Request $request)
+    {
+        $titulo = request("searchInput");
+        $seleccion = request("searchType");
+        $eleccion = request("searchCheck");
+        $eleccion2 = request("searchCheck2");
+        if($titulo !=""||$seleccion!=""||isset($eleccion)||isset($eleccion2)){
+            $books = Book::query();
+            if($titulo != ""){
+            $books = $books->where("title", "like", "%$titulo%");
+        }
+        if($seleccion != ""){
+            $books = $books->where('author_id',$seleccion);
+        }
+        if(isset($eleccion)){
+            $libros = $libros->orderBy('title', 'asc');
+        }
+        if(isset($eleccion2)){
+            $libros = $libros->orderBy('description', 'asc');
+        }
+        $librosPaginados = $libros->paginate(10);
+        } else {
+            $librosPaginados = $libros = Book::latest()->paginate(10);
+        }
+        return view ('public.books.partials.buscarAjaxIndex', ['books' => $libros->get()]);
+    }
+    public function paginarAjax($numElementos){
+        $books = Book::skip($numElementos)->take(10)->get();
+        $view = "";
+        if(count($books)>0){
+            $view =  view('public.books.partials.partialPaginate')->withBooks($books);
+        }    
+        return $view;
     }
 }
